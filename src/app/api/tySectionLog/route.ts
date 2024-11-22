@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-    if (allowedOrigins.includes(origin)) {
+    if (origin !== null && allowedOrigins.includes(origin)) {
       response.headers.set('Access-Control-Allow-Origin', origin);
     } else {
       response.headers.set('Access-Control-Allow-Origin', 'null');
