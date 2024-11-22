@@ -1,8 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import clientPromise from '@/lib/mongodb';
 import { MongoClient } from 'mongodb';
 
-export async function GET(req) {
+export async function GET(req: NextRequest) {
   try {
     const origin = req.headers.get('origin');
     const allowedOrigins = ['http://localhost:4200', 'http://tychan.net'];
