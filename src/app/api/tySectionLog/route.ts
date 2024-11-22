@@ -5,7 +5,7 @@ import { MongoClient } from 'mongodb';
 export async function GET(req: NextRequest) {
   try {
     const origin = req.headers.get('origin');
-    const allowedOrigins = ['http://localhost:4200', 'http://www.tychan.net'];
+    const allowedOrigins = ['http://localhost:4200', 'https://www.tychan.net'];
   
     const client: MongoClient = await clientPromise;
     const db = client.db('tychan_web');
