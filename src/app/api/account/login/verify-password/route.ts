@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcrypt';
-import { User, UserNameDetails } from '@/lib/user-data.model';
+import { UserNameDetails } from '@/lib/user-data.model';
 import { formatUserDisplayName } from '@/lib/shared_function';
 
 export async function OPTIONS(req: NextRequest) {

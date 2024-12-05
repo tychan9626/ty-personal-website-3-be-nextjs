@@ -111,9 +111,10 @@ export async function GET(req: NextRequest) {
     response.headers.set('Access-Control-Allow-Credentials', 'true');
 
     return response;
-  } catch (error: any) {
+  } catch (error) {
+    console.error('Failed to get new bill init value:', error);
     return NextResponse.json(
-      { error: error.message },
+      { success: false, message: 'Failed to get new bill init value' },
       { status: 500 }
     );
   }

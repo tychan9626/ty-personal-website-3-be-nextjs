@@ -1,6 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from "@/lib/supabase";
 
+interface BillItem {
+  name_en: string;
+  name_zh: string;
+  amount: number | null;
+  unit_id: string;
+  description: string;
+  price: number | null;
+  tax: number | null;
+  on_sale: boolean;
+}
+
 export async function OPTIONS(req: NextRequest) {
   const response = new NextResponse(null, { status: 200 });
   const origin = req.headers.get('origin');
@@ -69,12 +80,12 @@ export async function POST(req: NextRequest) {
     const billId = bill.tb_tyapp_bl_id;
 
     // Insert bill items
-    const billItemsToInsert = billItems.map((item: any) => ({
+    const billItemsToInsert = billItems.map((item: BillItem) => ({
       bill_id: billId,
       name_en: item.name_en,
       name_zh: item.name_zh || null,
       amount: item.amount || null,
-      unit_id: item.unit?.tb_tyapp_unt_id || null,
+      unit_id: item.unit_id || null,
       description: item.description || null,
       price: item.price || 0,
       tax: item.tax || 0,
