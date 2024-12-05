@@ -26,8 +26,8 @@ export async function GET(req: NextRequest) {
     const allowedOrigins = ['http://localhost:4200', 'https://www.tychan.net', 'https://tychan.net'];
 
     // 從 URL 查詢參數中提取 user_id
-    const { searchParams } = new URL(req.url);
-    const user_id = searchParams.get('user_id');
+    //const { searchParams } = new URL(req.url);
+    //const user_id = searchParams.get('user_id');
 
     // 獲取用戶資料
     const { data: users, error: usersError } = await supabase
