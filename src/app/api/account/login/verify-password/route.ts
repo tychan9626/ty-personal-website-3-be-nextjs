@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import bcrypt from 'bcrypt';
+import { User, UserNameDetails } from '@/lib/user-data.model';
+import { formatUserDisplayName } from '@/lib/shared_function';
 
 export async function OPTIONS(req: NextRequest) {
   const response = new NextResponse(null, { status: 200 });
@@ -67,7 +69,15 @@ export async function POST(req: NextRequest) {
         );
       }
 
-      const display_name = generateDisplayName(user);
+      const user_name_details: UserNameDetails = {
+        legal_first_name: user.legal_first_name,
+        legal_middle_name: user.legal_middle_name,
+        legal_last_name: user.legal_last_name,
+        preferred_first_name: user.preferred_first_name,
+        customized_display_name: user.customized_display_name,
+        name_display_mode: user.name_display_mode,
+      }
+      const display_name = formatUserDisplayName(user_name_details);
 
       // Step 3: Return user
       const response = NextResponse.json({
@@ -105,29 +115,3 @@ export async function POST(req: NextRequest) {
   }
 
 }
-export interface User {
-  id: string;
-  role: number;
-  legal_first_name: string;
-  legal_middle_name?: string;
-  legal_last_name: string;
-  preferred_first_name?: string;
-  customized_display_name?: string;
-  name_display_mode: number;
-}
-const generateDisplayName = (user : User) => {
-  switch (user.name_display_mode) {
-    case 1:
-      return user.legal_first_name + ' ' + user.legal_middle_name + ' ' + user.legal_last_name;
-    case 2:
-      return user.legal_last_name + ' ' + user.legal_middle_name + ' ' + user.legal_first_name;
-    case 3:
-      return user.preferred_first_name + ' ' + user.legal_middle_name + ' ' + user.legal_last_name;
-    case 4:
-      return user.legal_last_name + ' ' + user.legal_middle_name + ' ' + user.preferred_first_name;
-    case 5:
-      return user.customized_display_name; 
-    default:
-      return 'Anonymous'; // 預設名稱
-  }
-};
