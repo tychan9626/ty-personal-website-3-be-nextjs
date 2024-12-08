@@ -67,7 +67,7 @@ export async function GET(req: NextRequest) {
     // Get wallet data
     const { data: wallets, error: walletsError } = await supabase
       .from('tyapp_wallet')
-      .select('tb_tyapp_wlt_id, user_id, display_name')
+      .select('tb_tyapp_wlt_id, user_id, display_name, currency_id')
       .eq('status', 1);
 
     if (walletsError || !wallets) {
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    // Get wallet data
+    // Get unit data
     const { data: units, error: unitsError } = await supabase
       .from('unit')
       .select('tb_tyapp_unt_id, code')
@@ -90,13 +90,47 @@ export async function GET(req: NextRequest) {
       );
     }
 
+    // Get billsTitle data
+    const { data: billsTitle, error: bilsTitleError } = await supabase
+      .from('tyapp_bill')
+      .select('title')
+      .eq('status', 1);
+
+    if (bilsTitleError || !billsTitle) {
+      return NextResponse.json(
+        { success: false, message: 'Failed to get all bills\' title.' },
+        { status: 401 }
+      );
+    }
+
+    const outputBillsTitle = billsTitle.map((bill) => bill.title);
+
+    // Get billsItemTitle data
+    const { data: billsItemTitle, error: billsItemTitleError } = await supabase
+      .from('tyapp_bill_item')
+      .select('name_en, name_zh')
+      .eq('status', 1);
+
+    if (billsItemTitleError || !billsItemTitle) {
+      return NextResponse.json(
+        { success: false, message: 'Failed to get all bill items\' title.' },
+        { status: 401 }
+      );
+    }
+
+    const outputBillsItemNameEn = billsItemTitle.map((bill) => bill.name_en);
+    const outputBillsItemNameZh = billsItemTitle.map((bill) => bill.name_zh);
+
     const response = NextResponse.json({
       success: true,
       data: {
         users: OutputUsers,
         currencies: currencies,
         wallets: wallets,
-        units: units
+        units: units,
+        billTitles: outputBillsTitle,
+        billItemsTitleEn: outputBillsItemNameEn,
+        billItemsTitleZh: outputBillsItemNameZh,
       },
     });
 
