@@ -1,15 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from "@/lib/supabase";
 
-interface BillItem {
-  name_en: string;
-  name_zh: string;
+export interface submit_bill_item {
+  bill_id: string | null;
+  name_en: string | null;
+  name_zh: string | null;
   amount: number | null;
-  unit_id: string;
-  description: string;
+  unit_id: string | null;
+  qty: number | null;
+  description: string | null;
   price: number | null;
   tax: number | null;
   on_sale: boolean;
+  private: boolean;
 }
 
 export async function OPTIONS(req: NextRequest) {
@@ -48,7 +51,6 @@ export async function POST(req: NextRequest) {
       bill_subtotal,
       bill_tax,
       bill_tips,
-      bill_payer_id,
       paid_wallet_id,
       paid_amount,
       remarks,
@@ -103,7 +105,7 @@ export async function POST(req: NextRequest) {
     const billId = bill.tb_tyapp_bl_id;
 
     // 準備插入明細表數據 (tyapp_bill_item)
-    const billItemsToInsert = bill_items.map((item: any) => ({
+    const billItemsToInsert = bill_items.map((item: submit_bill_item) => ({
       bill_id: billId,
       name_en: item.name_en,
       name_zh: item.name_zh || null,
