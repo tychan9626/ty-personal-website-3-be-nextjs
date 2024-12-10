@@ -29,8 +29,8 @@ export async function GET(req: NextRequest) {
     //const { searchParams } = new URL(req.url);
     //const user_id = searchParams.get('user_id');
 
-    // 獲取用戶資料
-    const { data: users, error: usersError } = await supabase
+    // Get user data - START
+    const { data: user, error: userError } = await supabase
       .from('user')
       .select(
         'id, legal_first_name, legal_middle_name, legal_last_name, preferred_first_name, customized_display_name, name_display_mode'
@@ -38,99 +38,134 @@ export async function GET(req: NextRequest) {
       .eq('status', 1)
       .order('sequence_number', { ascending: true });
 
-    if (usersError || !users) {
+    if (!user || userError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all users.' },
         { status: 401 }
       );
     }
 
-    const OutputUsers = users.map((user) => ({
+    const outputUserList = user.map((user) => ({
       id: user.id,
       display_name: formatUserDisplayName(user),
     }));
+    // Get user data - END
 
-    // 獲取貨幣資料
-    const { data: currencies, error: currenciesError } = await supabase
+
+    // Get currency data - START
+    const { data: currency, error: currencyError } = await supabase
       .from('currency')
       .select('tb_tyapp_crny_id, code')
       .eq('status', 1)
       .order('display_sequence', { ascending: true });
 
-    if (currenciesError || !currencies) {
+    if (!currency || currencyError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all currencies.' },
         { status: 401 }
       );
     }
 
-    // Get wallet data
-    const { data: wallets, error: walletsError } = await supabase
+    const outputCurrencyList = currency.map((currency) => ({
+      id: currency.tb_tyapp_crny_id,
+      display_name: currency.code,
+    }));
+    // Get currency data - END
+
+
+    // Get wallet data - START
+    const { data: wallet, error: walletError } = await supabase
       .from('tyapp_wallet')
       .select('tb_tyapp_wlt_id, user_id, display_name, currency_id')
       .eq('status', 1);
 
-    if (walletsError || !wallets) {
+    if (!wallet || walletError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all wallets.' },
         { status: 401 }
       );
     }
 
-    // Get unit data
-    const { data: units, error: unitsError } = await supabase
+    const outputWalletList = wallet.map((wallet) => ({
+      id: wallet.tb_tyapp_wlt_id,
+      user_id: wallet.user_id,
+      currency_id: wallet.currency_id,
+      display_name: wallet.display_name,
+    }));
+    // Get wallet data - END
+
+
+    // Get unit data - START
+    const { data: unit, error: unitError } = await supabase
       .from('unit')
       .select('tb_tyapp_unt_id, code')
       .eq('status', 1);
 
-    if (unitsError || !units) {
+    if (!unit || unitError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all units.' },
         { status: 401 }
       );
     }
 
-    // Get billsTitle data
-    const { data: billsTitle, error: bilsTitleError } = await supabase
+    const outputUnitList = unit.map((unit) => ({
+      id: unit.tb_tyapp_unt_id,
+      display_name: unit.code,
+    }));
+    // Get unit data - END
+
+    // Get bill address, organization, title - START
+    const { data: billName, error: billNameError } = await supabase
       .from('tyapp_bill')
-      .select('title')
+      .select('address_en, address_zh, organization_en, organization_zh, action')
       .eq('status', 1);
 
-    if (bilsTitleError || !billsTitle) {
+    if (!billName || billNameError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all bills\' title.' },
         { status: 401 }
       );
     }
 
-    const outputBillsTitle = billsTitle.map((bill) => bill.title);
+    const outputBillAddressEn = billName.map((bill) => bill.address_en).filter((item) => item !== null);
+    const outputBillAddressZh = billName.map((bill) => bill.address_zh).filter((item) => item !== null);
+    const outputBillOrganizationEn = billName.map((bill) => bill.organization_en).filter((item) => item !== null);
+    const outputBillOrganizationZh = billName.map((bill) => bill.organization_zh).filter((item) => item !== null);
+    const outputBillAction = billName.map((bill) => bill.action).filter((item) => item !== null);
+    // Get bill address, organization, title - END
 
-    // Get billsItemTitle data
-    const { data: billsItemTitle, error: billsItemTitleError } = await supabase
+
+    // Get bill item name - START
+    const { data: billItemName, error: billItemNameError } = await supabase
       .from('tyapp_bill_item')
       .select('name_en, name_zh')
       .eq('status', 1);
 
-    if (billsItemTitleError || !billsItemTitle) {
+    if (!billItemName || billItemNameError) {
       return NextResponse.json(
         { success: false, message: 'Failed to get all bill items\' title.' },
         { status: 401 }
       );
     }
 
-    const outputBillsItemNameEn = billsItemTitle.map((bill) => bill.name_en);
-    const outputBillsItemNameZh = billsItemTitle.map((bill) => bill.name_zh);
+    const outputBillItemNameEn = billItemName.map((bill) => bill.name_en);
+    const outputBillItemNameZh = billItemName.map((bill) => bill.name_zh);
+    // Get bill item name - END
 
     const response = NextResponse.json({
       success: true,
       data: {
-        users: OutputUsers,
-        currencies: currencies,
-        wallets: wallets,
-        units: units,
-        billTitles: outputBillsTitle,
-        billItemsTitleEn: outputBillsItemNameEn,
-        billItemsTitleZh: outputBillsItemNameZh,
+        all_users: outputUserList,
+        all_currencies: outputCurrencyList,
+        all_wallets: outputWalletList,
+        all_units: outputUnitList,
+        all_bill_address_en: outputBillAddressEn,
+        all_bill_address_zh: outputBillAddressZh,
+        all_bill_organization_en: outputBillOrganizationEn,
+        all_bill_organization_zh: outputBillOrganizationZh,
+        all_bill_action: outputBillAction,
+        all_bill_item_name_en: outputBillItemNameEn,
+        all_bill_item_name_zh: outputBillItemNameZh,
       },
     });
 

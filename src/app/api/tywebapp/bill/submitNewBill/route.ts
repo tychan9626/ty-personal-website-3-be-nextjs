@@ -37,59 +37,84 @@ export async function POST(req: NextRequest) {
 
     const body = await req.json();
     const {
-      user_id,
-      bill_datetime,
+      bill_user_id,
+      address_en,
+      address_zh,
+      organization_en,
+      organization_zh,
+      action,
+      date_time,
       bill_currency_id,
       bill_subtotal,
       bill_tax,
-      bill_tip,
+      bill_tips,
+      bill_payer_id,
       paid_wallet_id,
       paid_amount,
-      title,
-      billItems,
+      remarks,
+      bill_items,
     } = body;
 
-    if (!user_id || !bill_currency_id || !billItems || !Array.isArray(billItems)) {
-      return NextResponse.json({ error: 'Invalid payload' }, { status: 400 });
+    // 驗證基礎參數是否有效
+    if (
+      !bill_user_id ||
+      !bill_currency_id ||
+      !Array.isArray(bill_items) ||
+      bill_items.length === 0
+    ) {
+      return NextResponse.json(
+        { error: 'Invalid payload: Missing required fields or bill_items array is empty.' },
+        { status: 400 }
+      );
     }
 
-    // Start a transaction
+    // 插入主表數據 (tyapp_bill)
     const { data: bill, error: billError } = await supabase
       .from('tyapp_bill')
       .insert([
         {
-          user_id,
-          bill_datetime,
+          user_id: bill_user_id,
+          address_en,
+          address_zh,
+          organization_en,
+          organization_zh,
+          action,
+          bill_datetime: date_time,
           bill_currency_id,
           bill_subtotal,
           bill_tax,
-          bill_tip,
+          bill_tip: bill_tips,
           paid_wallet_id,
           paid_amount,
-          title,
+          remarks,
         },
       ])
-      .select('tb_tyapp_bl_id') // Return the generated ID
+      .select('tb_tyapp_bl_id') // 返回自動生成的主鍵 ID
       .single();
 
     if (billError) {
       console.error('Error inserting bill:', billError);
-      return NextResponse.json({ error: 'Failed to create bill' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create bill. Please check the data and try again.' },
+        { status: 500 }
+      );
     }
 
     const billId = bill.tb_tyapp_bl_id;
 
-    // Insert bill items
-    const billItemsToInsert = billItems.map((item: BillItem) => ({
+    // 準備插入明細表數據 (tyapp_bill_item)
+    const billItemsToInsert = bill_items.map((item: any) => ({
       bill_id: billId,
       name_en: item.name_en,
       name_zh: item.name_zh || null,
       amount: item.amount || null,
       unit_id: item.unit_id || null,
+      qty: item.qty || 1, // 預設數量為 1
       description: item.description || null,
       price: item.price || 0,
       tax: item.tax || 0,
       on_sale: item.on_sale || false,
+      private: item.private || false, // 是否為私人項目
     }));
 
     const { error: billItemsError } = await supabase
@@ -98,7 +123,10 @@ export async function POST(req: NextRequest) {
 
     if (billItemsError) {
       console.error('Error inserting bill items:', billItemsError);
-      return NextResponse.json({ error: 'Failed to create bill items' }, { status: 500 });
+      return NextResponse.json(
+        { error: 'Failed to create bill items. Please check the items data.' },
+        { status: 500 }
+      );
     }
 
     const response = NextResponse.json({
