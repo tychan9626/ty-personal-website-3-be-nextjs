@@ -2,14 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { formatUserDisplayName } from '@/lib/shared_function';
 
-interface Bill {
-  address_en: string | null;
-  address_zh: string | null;
-  organization_en: string | null;
-  organization_zh: string | null;
-  action: string | null;
-}
-
 export async function OPTIONS(req: NextRequest) {
   const response = new NextResponse(null, { status: 200 });
   const origin = req.headers.get('origin');
@@ -124,28 +116,22 @@ export async function GET(req: NextRequest) {
 
     // Get bill address, organization, title - START
     const { data: billName, error: billNameError } = await supabase
-    .from('tyapp_bill')
-    .select('address_en, address_zh, organization_en, organization_zh, action')
-    .eq('status', 1);
-  
-  if (!billName || billNameError) {
-    return NextResponse.json(
-      { success: false, message: "Failed to get all bills' title." },
-      { status: 401 }
-    );
-  }
-  
-  // Helper function to extract unique non-null values
-  const getUniqueNonNullValues = (column: keyof Bill): string[] => {
-    return [...new Set(billName.map((bill) => bill[column]).filter((item): item is string => item !== null))];
-  };
-  
-  // Extract unique values for each column
-  const outputBillAddressEn = getUniqueNonNullValues('address_en');
-  const outputBillAddressZh = getUniqueNonNullValues('address_zh');
-  const outputBillOrganizationEn = getUniqueNonNullValues('organization_en');
-  const outputBillOrganizationZh = getUniqueNonNullValues('organization_zh');
-  const outputBillAction = getUniqueNonNullValues('action');
+      .from('tyapp_bill')
+      .select('address_en, address_zh, organization_en, organization_zh, action')
+      .eq('status', 1);
+
+    if (!billName || billNameError) {
+      return NextResponse.json(
+        { success: false, message: 'Failed to get all bills\' title.' },
+        { status: 401 }
+      );
+    }
+
+    const outputBillAddressEn = billName.map((bill) => bill.address_en).filter((item) => item !== null);
+    const outputBillAddressZh = billName.map((bill) => bill.address_zh).filter((item) => item !== null);
+    const outputBillOrganizationEn = billName.map((bill) => bill.organization_en).filter((item) => item !== null);
+    const outputBillOrganizationZh = billName.map((bill) => bill.organization_zh).filter((item) => item !== null);
+    const outputBillAction = billName.map((bill) => bill.action).filter((item) => item !== null);
     // Get bill address, organization, title - END
 
 

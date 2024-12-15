@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     // Step 1: Find user
     const { data: user, error: userError } = await supabase
       .from('user')
-      .select('id, role, legal_first_name, legal_middle_name, legal_last_name, preferred_first_name, customized_display_name, name_display_mode')
+      .select('id, role, legal_first_name, legal_middle_name, legal_last_name, preferred_first_name, customized_display_name, name_display_mode, role')
       .eq('account_name', account_name)
       .eq('status', 1)
       .single();
@@ -85,6 +85,7 @@ export async function POST(req: NextRequest) {
         data: {
           id: user.id,
           display_name: display_name,
+          role: user.role,
         },
       });
 
